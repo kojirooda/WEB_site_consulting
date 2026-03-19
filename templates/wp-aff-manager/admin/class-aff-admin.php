@@ -241,7 +241,36 @@ class Aff_Admin {
         exit;
     }
 
-    // ── 共通ヘルパー: 削除リンク生成 ──────────────────────────────────
+    // ── 共通ヘルパー ──────────────────────────────────────────────────
+
+    /**
+     * MySQL datetime 文字列 → datetime-local input の value 形式 (YYYY-MM-DDTHH:MM)
+     * null / 空文字の場合は空文字を返す
+     */
+    public static function to_datetime_local( ?string $dt ): string {
+        if ( ! $dt ) {
+            return '';
+        }
+        return esc_attr( str_replace( ' ', 'T', substr( $dt, 0, 16 ) ) );
+    }
+
+    /**
+     * MySQL date(time) 文字列 → 表示用日付 (YYYY-MM-DD)
+     * null / 空文字の場合は '—' を返す（エスケープ済み）
+     */
+    public static function to_date_str( ?string $dt ): string {
+        return $dt ? esc_html( substr( $dt, 0, 10 ) ) : '—';
+    }
+
+    /**
+     * DB 行オブジェクトから指定カラムの値を esc_attr() 済みで返す
+     * $row が null（新規追加時）は $default を返す
+     */
+    public static function row_val( ?object $row, string $col, string $default = '' ): string {
+        return $row ? esc_attr( $row->$col ) : $default;
+    }
+
+    /** 削除リンク生成 */
     public static function delete_link( string $entity, int $id, string $page ): string {
         $nonce = wp_create_nonce( "aff_delete_{$entity}_{$id}" );
         $url   = admin_url( "admin.php?page={$page}&action=delete&id={$id}&_wpnonce={$nonce}" );

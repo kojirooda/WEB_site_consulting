@@ -3,7 +3,7 @@ defined( 'ABSPATH' ) || exit;
 global $wpdb;
 $id  = absint( $_GET['id'] ?? 0 );
 $row = $id ? $wpdb->get_row( $wpdb->prepare( "SELECT * FROM " . Aff_DB::table('blocks') . " WHERE id=%d", $id ) ) : null;
-$v   = fn( $col, $default = '' ) => $row ? esc_attr( $row->$col ) : $default;
+$v   = fn( $col, $default = '' ) => Aff_Admin::row_val( $row, $col, $default );
 ?>
 <div class="wrap aff-wrap">
 <h1><?php echo $id ? 'ブロック編集' : 'ブロック新規追加'; ?></h1>

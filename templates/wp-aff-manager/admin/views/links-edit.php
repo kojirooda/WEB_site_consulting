@@ -3,7 +3,7 @@ defined( 'ABSPATH' ) || exit;
 global $wpdb;
 $id   = absint( $_GET['id'] ?? 0 );
 $row  = $id ? $wpdb->get_row( $wpdb->prepare( "SELECT * FROM " . Aff_DB::table('links') . " WHERE id=%d", $id ) ) : null;
-$v    = fn( $col, $default = '' ) => $row ? esc_attr( $row->$col ) : $default;
+$v    = fn( $col, $default = '' ) => Aff_Admin::row_val( $row, $col, $default );
 ?>
 <div class="wrap aff-wrap">
 <h1><?php echo $id ? 'リンク編集' : 'リンク新規追加'; ?></h1>
@@ -65,9 +65,9 @@ $v    = fn( $col, $default = '' ) => $row ? esc_attr( $row->$col ) : $default;
 <tr>
   <th>掲載期間</th>
   <td>
-    <label>開始: <input type="datetime-local" name="valid_from" value="<?php echo $row && $row->valid_from ? esc_attr( str_replace(' ','T', substr($row->valid_from,0,16)) ) : ''; ?>"></label>
+    <label>開始: <input type="datetime-local" name="valid_from" value="<?php echo Aff_Admin::to_datetime_local( $row->valid_from ?? null ); ?>"></label>
     &nbsp;
-    <label>終了: <input type="datetime-local" name="valid_until" value="<?php echo $row && $row->valid_until ? esc_attr( str_replace(' ','T', substr($row->valid_until,0,16)) ) : ''; ?>"></label>
+    <label>終了: <input type="datetime-local" name="valid_until" value="<?php echo Aff_Admin::to_datetime_local( $row->valid_until ?? null ); ?>"></label>
     <p class="description">空欄 = 無期限</p>
   </td>
 </tr>

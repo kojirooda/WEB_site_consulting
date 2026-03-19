@@ -3,7 +3,7 @@ defined( 'ABSPATH' ) || exit;
 global $wpdb;
 $id  = absint( $_GET['id'] ?? 0 );
 $row = $id ? $wpdb->get_row( $wpdb->prepare( "SELECT * FROM " . Aff_DB::table('assignments') . " WHERE id=%d", $id ) ) : null;
-$v   = fn( $col, $default = '' ) => $row ? esc_attr( $row->$col ) : $default;
+$v   = fn( $col, $default = '' ) => Aff_Admin::row_val( $row, $col, $default );
 
 $blocks = $wpdb->get_results( "SELECT id, block_name, block_slug FROM " . Aff_DB::table('blocks') . " ORDER BY block_name" );
 $links  = $wpdb->get_results( "SELECT id, link_name, advertiser, status FROM " . Aff_DB::table('links') . " ORDER BY link_name" );
@@ -88,9 +88,9 @@ $pages  = $wpdb->get_results( "SELECT id, page_label, priority FROM " . Aff_DB::
 <tr>
   <th>掲載期間</th>
   <td>
-    <label>開始: <input type="datetime-local" name="start_date" value="<?php echo $row && $row->start_date ? esc_attr( str_replace(' ','T', substr($row->start_date,0,16)) ) : ''; ?>"></label>
+    <label>開始: <input type="datetime-local" name="start_date" value="<?php echo Aff_Admin::to_datetime_local( $row->start_date ?? null ); ?>"></label>
     &nbsp;
-    <label>終了: <input type="datetime-local" name="end_date" value="<?php echo $row && $row->end_date ? esc_attr( str_replace(' ','T', substr($row->end_date,0,16)) ) : ''; ?>"></label>
+    <label>終了: <input type="datetime-local" name="end_date" value="<?php echo Aff_Admin::to_datetime_local( $row->end_date ?? null ); ?>"></label>
     <p class="description">空欄 = 無期限（リンク側の掲載期間も適用されます）</p>
   </td>
 </tr>

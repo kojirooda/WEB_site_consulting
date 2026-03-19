@@ -33,7 +33,7 @@ $rows = $wpdb->get_results(
   <td>¥<?php echo number_format( (float) $r->unit_price ); ?></td>
   <td><span class="aff-badge aff-badge--<?php echo esc_attr( $r->status ); ?>"><?php echo esc_html( $r->status ); ?></span></td>
   <td><?php echo number_format( (int) $r->click_count ); ?></td>
-  <td><?php echo $r->valid_until ? esc_html( substr( $r->valid_until, 0, 10 ) ) : '—'; ?></td>
+  <td><?php echo Aff_Admin::to_date_str( $r->valid_until ); ?></td>
   <td>
     <a href="<?php echo esc_url( $edit_url ); ?>">編集</a> |
     <?php echo Aff_Admin::delete_link( 'links', $r->id, 'wp-aff-manager' ); ?>

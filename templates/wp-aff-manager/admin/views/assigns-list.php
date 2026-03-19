@@ -79,10 +79,15 @@ $blocks = $wpdb->get_results( "SELECT id, block_name FROM {$t_b} ORDER BY block_
   <td><?php echo (int) $r->display_order; ?></td>
   <td><?php echo $r->is_active ? '✓' : '—'; ?></td>
   <td>
-    <?php echo $r->start_date ? esc_html( substr($r->start_date,0,10) ) : ''; ?>
-    <?php echo ( $r->start_date && $r->end_date ) ? ' 〜 ' : ''; ?>
-    <?php echo $r->end_date ? esc_html( substr($r->end_date,0,10) ) : ''; ?>
-    <?php echo ( ! $r->start_date && ! $r->end_date ) ? '無期限' : ''; ?>
+    <?php
+    if ( ! $r->start_date && ! $r->end_date ) {
+        echo '無期限';
+    } else {
+        echo Aff_Admin::to_date_str( $r->start_date ?: null );
+        if ( $r->start_date && $r->end_date ) { echo ' 〜 '; }
+        echo Aff_Admin::to_date_str( $r->end_date ?: null );
+    }
+    ?>
   </td>
   <td>
     <a href="<?php echo esc_url( $edit_url ); ?>">編集</a> |
