@@ -34,7 +34,8 @@ class Aff_Admin {
         add_submenu_page( self::MENU_SLUG, 'ブロック管理',     'ブロック管理',     'manage_options', self::MENU_SLUG . '-blocks',   [ $this, 'page_blocks' ] );
         add_submenu_page( self::MENU_SLUG, 'ページ条件管理',   'ページ条件管理',   'manage_options', self::MENU_SLUG . '-pages',    [ $this, 'page_pages' ] );
         add_submenu_page( self::MENU_SLUG, '割り当て管理',     '割り当て管理',     'manage_options', self::MENU_SLUG . '-assigns',  [ $this, 'page_assigns' ] );
-        add_submenu_page( self::MENU_SLUG, 'CSVインポート',    'CSV インポート',   'manage_options', self::MENU_SLUG . '-import',   [ $this, 'page_import' ] );
+        add_submenu_page( self::MENU_SLUG, 'CSVインポート',      'CSV インポート',     'manage_options', self::MENU_SLUG . '-import',   [ $this, 'page_import' ] );
+        add_submenu_page( self::MENU_SLUG, 'Google Sheets 連携', 'Sheets 連携',       'manage_options', self::MENU_SLUG . '-sheets',   [ $this, 'page_sheets' ] );
     }
 
     public function enqueue_assets( string $hook ): void {
@@ -64,6 +65,14 @@ class Aff_Admin {
                 check_admin_referer( 'aff_import_links_csv' );
                 $this->import_links_csv();
                 return; // import は自ページ内に結果を表示するためリダイレクトしない
+            case 'save_sheets_url':
+                check_admin_referer( 'aff_save_sheets_url' );
+                $this->save_sheets_url();
+                return;
+            case 'import_from_sheets':
+                check_admin_referer( 'aff_import_from_sheets' );
+                $this->import_from_sheets();
+                return; // 結果を同一ページに表示するためリダイレクトしない
             case 'save_block':
                 check_admin_referer( 'aff_save_block' );
                 $this->save_block();
@@ -85,6 +94,7 @@ class Aff_Admin {
     public function page_pages(): void   { $this->dispatch( 'pages' ); }
     public function page_assigns(): void { $this->dispatch( 'assigns' ); }
     public function page_import(): void  { $this->dispatch_import(); }
+    public function page_sheets(): void  { $this->dispatch_sheets(); }
 
     private function dispatch( string $entity ): void {
         if ( ! current_user_can( 'manage_options' ) ) {
@@ -343,5 +353,39 @@ class Aff_Admin {
             wp_die( esc_html__( 'Forbidden', 'wp-aff-manager' ) );
         }
         require AFF_PLUGIN_DIR . 'admin/views/links-import.php';
+    }
+
+    // ── Google Sheets: URL 保存 ───────────────────────────────────────
+    private function save_sheets_url(): void {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_die( esc_html__( 'Forbidden', 'wp-aff-manager' ) );
+        }
+        $url = esc_url_raw( $_POST['sheets_url'] ?? '' );
+        if ( ! Aff_Sheets::save_url( $url ) ) {
+            wp_die(
+                'Google スプレッドシートの URL（https://docs.google.com/spreadsheets/...）を入力してください。',
+                'Validation Error',
+                [ 'back_link' => true ]
+            );
+        }
+        wp_safe_redirect( admin_url( 'admin.php?page=' . self::MENU_SLUG . '-sheets&saved=1' ) );
+        exit;
+    }
+
+    // ── Google Sheets: 取り込み実行 ──────────────────────────────────
+    private function import_from_sheets(): void {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_die( esc_html__( 'Forbidden', 'wp-aff-manager' ) );
+        }
+        $GLOBALS['aff_sheets_result'] = Aff_Sheets::fetch_and_import();
+        $this->dispatch_sheets();
+    }
+
+    // ── Google Sheets ページのディスパッチャー ───────────────────────
+    private function dispatch_sheets(): void {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_die( esc_html__( 'Forbidden', 'wp-aff-manager' ) );
+        }
+        require AFF_PLUGIN_DIR . 'admin/views/sheets-import.php';
     }
 }

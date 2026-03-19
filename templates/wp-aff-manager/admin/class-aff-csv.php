@@ -144,7 +144,51 @@ class Aff_CSV {
             return $result;
         }
 
-        // ── 行ごとにパース ──
+        return self::parse_content_rows( $content, $result );
+    }
+
+    /**
+     * 文字列から直接 CSV をパース・バリデートする（Google Sheets 連携用）。
+     * ファイルアップロード検証はスキップされる。
+     *
+     * @param  string $raw_content  取得した CSV 生文字列（BOM 付き可・Shift-JIS 可）
+     * @return array{valid_rows: array[], errors: array[], total: int, skipped: int}
+     */
+    public static function parse_and_validate_from_string( string $raw_content ): array {
+        $result = [
+            'valid_rows' => [],
+            'errors'     => [],
+            'total'      => 0,
+            'skipped'    => 0,
+        ];
+
+        // BOM 除去
+        if ( str_starts_with( $raw_content, "\xEF\xBB\xBF" ) ) {
+            $raw_content = substr( $raw_content, 3 );
+        }
+
+        // エンコーディング検出・UTF-8 変換
+        $encoding = mb_detect_encoding( $raw_content, [ 'UTF-8', 'SJIS', 'EUC-JP', 'JIS' ], true );
+        if ( $encoding === false ) {
+            $result['errors'][] = [
+                'row'      => '—',
+                'field'    => 'エンコーディング',
+                'messages' => [ '文字コードを判定できませんでした。' ],
+            ];
+            return $result;
+        }
+        if ( $encoding !== 'UTF-8' ) {
+            $raw_content = mb_convert_encoding( $raw_content, 'UTF-8', $encoding );
+        }
+
+        return self::parse_content_rows( $raw_content, $result );
+    }
+
+    /**
+     * デコード済み CSV 文字列を行ごとにパース・バリデートする共通処理。
+     * parse_and_validate() と parse_and_validate_from_string() が共用。
+     */
+    private static function parse_content_rows( string $content, array $result ): array {
         $lines  = self::csv_to_rows( $content );
         $header = null;
 
@@ -173,12 +217,11 @@ class Aff_CSV {
             if ( $header === null ) {
                 $normalized = array_map( 'trim', $row );
                 if ( $normalized !== self::HEADERS ) {
-                    // ヘッダーが違う → インポート中止
                     $result['errors'][] = [
                         'row'      => $line_num + 1,
                         'field'    => 'ヘッダー',
                         'messages' => [
-                            'ヘッダー行が一致しません。テンプレート CSV を使用してください。',
+                            'ヘッダー行が一致しません。テンプレート CSV と同じ列構成にしてください。',
                             '期待値: ' . implode( ', ', self::HEADERS ),
                             '実際値: ' . implode( ', ', $normalized ),
                         ],
@@ -226,7 +269,7 @@ class Aff_CSV {
             $result['errors'][] = [
                 'row'      => '—',
                 'field'    => 'ファイル',
-                'messages' => [ 'ヘッダー行が見つかりませんでした。空のファイルか、形式が正しくありません。' ],
+                'messages' => [ 'ヘッダー行が見つかりませんでした。空のシートか、列構成が正しくありません。' ],
             ];
         }
 
