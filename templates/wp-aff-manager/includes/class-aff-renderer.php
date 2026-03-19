@@ -23,8 +23,13 @@ class Aff_Renderer {
             $items_html .= self::render_link( $block, $row );
         }
 
+        // list フォーマットは <li> の集合なので <ul> でラップする（valid HTML）
+        if ( $block->display_format === 'list' && $block->template === '' ) {
+            $items_html = '<ul class="aff-list">' . $items_html . '</ul>';
+        }
+
         // ブロックラッパー
-        $css = $block->css_class ? esc_attr( $block->css_class ) : '';
+        $css  = $block->css_class ? esc_attr( $block->css_class ) : '';
         $slug = esc_attr( $block->block_slug );
         return sprintf(
             '<div class="aff-block aff-block--%s %s" data-block-id="%d">%s</div>',

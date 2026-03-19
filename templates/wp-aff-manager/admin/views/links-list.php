@@ -2,6 +2,7 @@
 <div class="wrap aff-wrap">
 <h1 class="wp-heading-inline">アフィリエイトリンク管理</h1>
 <a href="<?php echo esc_url( admin_url( 'admin.php?page=wp-aff-manager&action=edit' ) ); ?>" class="page-title-action">新規追加</a>
+<a href="<?php echo esc_url( admin_url( 'admin.php?page=wp-aff-manager-import' ) ); ?>" class="page-title-action">⬆ CSV インポート</a>
 <?php Aff_Admin::saved_notice(); ?>
 
 <?php

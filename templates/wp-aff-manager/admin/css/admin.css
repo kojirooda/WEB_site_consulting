@@ -53,3 +53,46 @@
 
 /* submit */
 .aff-form .submit { margin-top: 20px; padding-top: 16px; border-top: 1px solid #e5e7eb; }
+
+/* ── CSV インポートページ ── */
+.aff-import-guide {
+    background: #f0f9ff;
+    border: 1px solid #bae6fd;
+    border-radius: 6px;
+    padding: 16px 20px;
+    margin: 16px 0 24px;
+}
+.aff-import-guide h2 { margin: 0 0 10px; font-size: 15px; color: #0c4a6e; }
+.aff-import-guide ol { margin: 0; padding-left: 1.4em; }
+.aff-import-guide li { margin-bottom: 8px; font-size: 13px; line-height: 1.6; }
+
+.aff-import-section { margin-bottom: 32px; }
+.aff-import-section h2 { font-size: 15px; border-bottom: 2px solid #1a2b6d; padding-bottom: 6px; margin-bottom: 14px; }
+
+.aff-dl-btn { font-size: 13px !important; }
+
+/* CSV 仕様アコーディオン */
+.aff-csv-spec { margin-top: 10px; }
+.aff-csv-spec summary { cursor: pointer; color: #1a2b6d; font-weight: 600; font-size: 13px; padding: 6px 0; }
+.aff-spec-table { margin-top: 8px; font-size: 12px; }
+.aff-spec-table th { background: #374151; color: #fff; padding: 7px 10px; }
+.aff-spec-table td { padding: 6px 10px; border-bottom: 1px solid #e5e7eb; }
+
+/* 結果サマリーバッジ */
+.aff-result-summary { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+.aff-result-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 700;
+}
+.aff-result-badge--total   { background: #e0e7ff; color: #3730a3; }
+.aff-result-badge--success { background: #d1fae5; color: #065f46; }
+.aff-result-badge--error   { background: #fee2e2; color: #991b1b; }
+
+/* エラーテーブル */
+.aff-error-table .aff-error-row { font-family: monospace; font-size: 12px; white-space: nowrap; color: #6b7280; }
+.aff-error-list { margin: 0; padding-left: 1.2em; }
+.aff-error-list li { margin-bottom: 3px; font-size: 12px; color: #dc2626; }

@@ -28,8 +28,10 @@ class Aff_Query {
         }
 
         global $wpdb;
+        // SELECT * を避け、マッチングに必要なカラムのみ取得（効率化）
         $rows = $wpdb->get_results(
-            "SELECT * FROM " . Aff_DB::table('pages') . " ORDER BY priority DESC",
+            "SELECT id, target_type, post_type, post_id, term_id, url_pattern
+             FROM " . Aff_DB::table('pages') . " ORDER BY priority DESC",
             ARRAY_A
         );
 
@@ -105,69 +107,46 @@ class Aff_Query {
         $t_l      = Aff_DB::table('links');
         $max      = (int) $block->max_links;
 
-        // page_id が NULL の行（デフォルト）と、マッチした page_id の行を両方取得。
-        // ORDER: page_id が非 NULL（ページ固有）を先に、次にデフォルトを並べて
-        // max_links で打ち切ることで「ページ固有が優先」を実現。
-        if ( $page_id !== null ) {
-            $sql = $wpdb->prepare(
-                "SELECT a.id AS assignment_id,
-                        a.display_order,
-                        a.override_text,
-                        a.page_id,
-                        l.id        AS link_id,
-                        l.url,
-                        l.link_text,
-                        l.banner_url,
-                        l.advertiser,
-                        l.commission_type,
-                        l.unit_price
-                 FROM   {$t_a} a
-                 INNER JOIN {$t_l} l ON l.id = a.link_id
-                 WHERE  a.block_id  = %d
-                   AND  (a.page_id IS NULL OR a.page_id = %d)
-                   AND  a.is_active = 1
-                   AND  (a.start_date IS NULL OR a.start_date <= %s)
-                   AND  (a.end_date   IS NULL OR a.end_date   >= %s)
-                   AND  l.status = 'active'
-                   AND  (l.valid_from  IS NULL OR l.valid_from  <= %s)
-                   AND  (l.valid_until IS NULL OR l.valid_until >= %s)
-                 ORDER BY (a.page_id IS NULL) ASC, a.display_order ASC
-                 LIMIT %d",
-                $block->id, $page_id,
-                $now, $now, $now, $now,
-                $max
-            );
-        } else {
-            // ページ条件がマッチしなかった場合はデフォルト（page_id = NULL）のみ
-            $sql = $wpdb->prepare(
-                "SELECT a.id AS assignment_id,
-                        a.display_order,
-                        a.override_text,
-                        a.page_id,
-                        l.id        AS link_id,
-                        l.url,
-                        l.link_text,
-                        l.banner_url,
-                        l.advertiser,
-                        l.commission_type,
-                        l.unit_price
-                 FROM   {$t_a} a
-                 INNER JOIN {$t_l} l ON l.id = a.link_id
-                 WHERE  a.block_id  = %d
-                   AND  a.page_id IS NULL
-                   AND  a.is_active = 1
-                   AND  (a.start_date IS NULL OR a.start_date <= %s)
-                   AND  (a.end_date   IS NULL OR a.end_date   >= %s)
-                   AND  l.status = 'active'
-                   AND  (l.valid_from  IS NULL OR l.valid_from  <= %s)
-                   AND  (l.valid_until IS NULL OR l.valid_until >= %s)
-                 ORDER BY a.display_order ASC
-                 LIMIT %d",
-                $block->id,
-                $now, $now, $now, $now,
-                $max
-            );
-        }
+        // page_id がマッチした場合: (page_id IS NULL OR page_id = $matched) の両方を取得し
+        // ページ固有行を先に並べることで max_links 内でページ固有が優先される。
+        // page_id がマッチしなかった場合: デフォルト行（page_id IS NULL）のみ。
+        // 2つの分岐を1クエリに統合: page_id 条件を動的に組み立てる。
+        $page_condition = $page_id !== null
+            ? $wpdb->prepare( '(a.page_id IS NULL OR a.page_id = %d)', $page_id )
+            : 'a.page_id IS NULL';
+
+        $order_by = $page_id !== null
+            ? '(a.page_id IS NULL) ASC, a.display_order ASC'
+            : 'a.display_order ASC';
+
+        $sql = $wpdb->prepare(
+            "SELECT a.id AS assignment_id,
+                    a.display_order,
+                    a.override_text,
+                    a.page_id,
+                    l.id        AS link_id,
+                    l.url,
+                    l.link_text,
+                    l.banner_url,
+                    l.advertiser,
+                    l.commission_type,
+                    l.unit_price
+             FROM   {$t_a} a
+             INNER JOIN {$t_l} l ON l.id = a.link_id
+             WHERE  a.block_id  = %d
+               AND  {$page_condition}
+               AND  a.is_active = 1
+               AND  (a.start_date IS NULL OR a.start_date <= %s)
+               AND  (a.end_date   IS NULL OR a.end_date   >= %s)
+               AND  l.status = 'active'
+               AND  (l.valid_from  IS NULL OR l.valid_from  <= %s)
+               AND  (l.valid_until IS NULL OR l.valid_until >= %s)
+             ORDER BY {$order_by}
+             LIMIT %d",
+            $block->id,
+            $now, $now, $now, $now,
+            $max
+        ); // phpcs:ignore WordPress.DB.PreparedSQL
 
         return $wpdb->get_results( $sql ) ?: [];
     }

@@ -26,6 +26,7 @@ require_once AFF_PLUGIN_DIR . 'includes/class-aff-hooks.php';
 
 if ( is_admin() ) {
     require_once AFF_PLUGIN_DIR . 'admin/class-aff-admin.php';
+    require_once AFF_PLUGIN_DIR . 'admin/class-aff-csv.php';
 }
 
 // ── Activation / Deactivation ──────────────────────────────────────────

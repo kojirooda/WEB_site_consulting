@@ -16,6 +16,7 @@ class Aff_Admin {
         add_action( 'admin_menu',            [ $this, 'register_menus' ] );
         add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_assets' ] );
         add_action( 'admin_init',            [ $this, 'handle_post' ] );
+        add_action( 'admin_init',            [ $this, 'handle_csv_download' ] );
     }
 
     // ── メニュー登録 ──────────────────────────────────────────────────
@@ -29,10 +30,11 @@ class Aff_Admin {
             'dashicons-megaphone',
             58
         );
-        add_submenu_page( self::MENU_SLUG, 'リンク管理',       'リンク管理',       'manage_options', self::MENU_SLUG,              [ $this, 'page_links' ] );
+        add_submenu_page( self::MENU_SLUG, 'リンク管理',       'リンク管理',       'manage_options', self::MENU_SLUG,               [ $this, 'page_links' ] );
         add_submenu_page( self::MENU_SLUG, 'ブロック管理',     'ブロック管理',     'manage_options', self::MENU_SLUG . '-blocks',   [ $this, 'page_blocks' ] );
         add_submenu_page( self::MENU_SLUG, 'ページ条件管理',   'ページ条件管理',   'manage_options', self::MENU_SLUG . '-pages',    [ $this, 'page_pages' ] );
         add_submenu_page( self::MENU_SLUG, '割り当て管理',     '割り当て管理',     'manage_options', self::MENU_SLUG . '-assigns',  [ $this, 'page_assigns' ] );
+        add_submenu_page( self::MENU_SLUG, 'CSVインポート',    'CSV インポート',   'manage_options', self::MENU_SLUG . '-import',   [ $this, 'page_import' ] );
     }
 
     public function enqueue_assets( string $hook ): void {
@@ -58,6 +60,10 @@ class Aff_Admin {
                 check_admin_referer( 'aff_save_link' );
                 $this->save_link();
                 break;
+            case 'import_links_csv':
+                check_admin_referer( 'aff_import_links_csv' );
+                $this->import_links_csv();
+                return; // import は自ページ内に結果を表示するためリダイレクトしない
             case 'save_block':
                 check_admin_referer( 'aff_save_block' );
                 $this->save_block();
@@ -74,10 +80,11 @@ class Aff_Admin {
     }
 
     // ── 各ページディスパッチャー ──────────────────────────────────────
-    public function page_links(): void  { $this->dispatch( 'links' ); }
-    public function page_blocks(): void { $this->dispatch( 'blocks' ); }
-    public function page_pages(): void  { $this->dispatch( 'pages' ); }
-    public function page_assigns(): void{ $this->dispatch( 'assigns' ); }
+    public function page_links(): void   { $this->dispatch( 'links' ); }
+    public function page_blocks(): void  { $this->dispatch( 'blocks' ); }
+    public function page_pages(): void   { $this->dispatch( 'pages' ); }
+    public function page_assigns(): void { $this->dispatch( 'assigns' ); }
+    public function page_import(): void  { $this->dispatch_import(); }
 
     private function dispatch( string $entity ): void {
         if ( ! current_user_can( 'manage_options' ) ) {
@@ -228,5 +235,63 @@ class Aff_Admin {
         if ( isset( $_GET['saved'] ) ) {
             echo '<div class="notice notice-success is-dismissible"><p>保存しました。</p></div>';
         }
+    }
+
+    // ── CSV ダウンロード（GET リクエスト） ────────────────────────────
+    public function handle_csv_download(): void {
+        if ( ! isset( $_GET['aff_csv_dl'] ) || ! isset( $_GET['page'] ) ) {
+            return;
+        }
+        if ( sanitize_key( $_GET['page'] ) !== self::MENU_SLUG . '-import' ) {
+            return;
+        }
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_die( esc_html__( 'Forbidden', 'wp-aff-manager' ) );
+        }
+        check_admin_referer( 'aff_csv_download' );
+
+        Aff_CSV::download_template(); // exit 内包
+    }
+
+    // ── CSV インポート処理（POST リクエスト） ─────────────────────────
+    private function import_links_csv(): void {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_die( esc_html__( 'Forbidden', 'wp-aff-manager' ) );
+        }
+
+        $file = $_FILES['csv_file'] ?? null;
+        if ( ! $file ) {
+            $GLOBALS['aff_import_result'] = [
+                'total'    => 0,
+                'imported' => 0,
+                'skipped'  => 0,
+                'errors'   => [ [ 'row' => '—', 'field' => 'ファイル', 'messages' => [ 'ファイルが選択されていません。' ] ] ],
+            ];
+            $this->dispatch_import();
+            return;
+        }
+
+        $parsed = Aff_CSV::parse_and_validate( $file );
+        $imported = 0;
+        if ( ! empty( $parsed['valid_rows'] ) ) {
+            $imported = Aff_CSV::import_rows( $parsed['valid_rows'] );
+        }
+
+        $GLOBALS['aff_import_result'] = [
+            'total'    => $parsed['total'],
+            'imported' => $imported,
+            'skipped'  => $parsed['skipped'],
+            'errors'   => $parsed['errors'],
+        ];
+
+        $this->dispatch_import();
+    }
+
+    // ── インポートページのディスパッチャー ───────────────────────────
+    private function dispatch_import(): void {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_die( esc_html__( 'Forbidden', 'wp-aff-manager' ) );
+        }
+        require AFF_PLUGIN_DIR . 'admin/views/links-import.php';
     }
 }
