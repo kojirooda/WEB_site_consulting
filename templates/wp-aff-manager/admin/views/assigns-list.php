@@ -15,8 +15,16 @@ $t_p = Aff_DB::table('pages');
 $filter_block = absint( $_GET['block_id'] ?? 0 );
 $where        = $filter_block ? $wpdb->prepare( "WHERE a.block_id = %d", $filter_block ) : '';
 
-$rows = $wpdb->get_results(
-    "SELECT a.*,
+// ── ページネーション ──────────────────────────────────────────────
+$per_page    = 50;
+$current_page = max( 1, absint( $_GET['paged'] ?? 1 ) );
+$offset      = ( $current_page - 1 ) * $per_page;
+
+// SELECT * を避けて必要カラムのみ取得（効率化）
+$rows = $wpdb->get_results( $wpdb->prepare(
+    "SELECT a.id, a.block_id, a.link_id, a.page_id,
+            a.display_order, a.override_text, a.is_active,
+            a.start_date, a.end_date,
             b.block_name, b.block_slug,
             l.link_name, l.advertiser,
             p.page_label
@@ -25,8 +33,15 @@ $rows = $wpdb->get_results(
      LEFT JOIN {$t_l} l ON l.id = a.link_id
      LEFT JOIN {$t_p} p ON p.id = a.page_id
      {$where}
-     ORDER BY b.block_name ASC, a.display_order ASC"
-);
+     ORDER BY b.block_name ASC, a.display_order ASC
+     LIMIT %d OFFSET %d",
+    $per_page,
+    $offset
+) ); // phpcs:ignore WordPress.DB.PreparedSQL
+
+// 総件数（ページネーション計算用）
+$total_count = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$t_a} a {$where}" ); // phpcs:ignore
+$total_pages = max( 1, (int) ceil( $total_count / $per_page ) );
 
 // ブロック一覧（フィルター用）
 $blocks = $wpdb->get_results( "SELECT id, block_name FROM {$t_b} ORDER BY block_name" );
@@ -41,6 +56,7 @@ $blocks = $wpdb->get_results( "SELECT id, block_name FROM {$t_b} ORDER BY block_
       <?php endforeach; ?>
     </select>
   </label>
+  <span class="aff-total-count">全 <?php echo number_format( $total_count ); ?> 件</span>
 </div>
 
 <table class="widefat aff-table">
@@ -78,4 +94,33 @@ $blocks = $wpdb->get_results( "SELECT id, block_name FROM {$t_b} ORDER BY block_
 <?php endif; ?>
 </tbody>
 </table>
+
+<?php if ( $total_pages > 1 ) : ?>
+<div class="aff-pagination">
+  <?php
+  $base_url = admin_url( 'admin.php?page=wp-aff-manager-assigns' )
+              . ( $filter_block ? '&block_id=' . $filter_block : '' );
+
+  if ( $current_page > 1 ) {
+      printf( '<a href="%s" class="button">&laquo; 前へ</a> ',
+              esc_url( $base_url . '&paged=' . ( $current_page - 1 ) ) );
+  }
+
+  for ( $i = max( 1, $current_page - 2 ); $i <= min( $total_pages, $current_page + 2 ); $i++ ) {
+      printf(
+          '<a href="%s" class="button %s">%d</a> ',
+          esc_url( $base_url . '&paged=' . $i ),
+          $i === $current_page ? 'button-primary' : '',
+          $i
+      );
+  }
+
+  if ( $current_page < $total_pages ) {
+      printf( '<a href="%s" class="button">次へ &raquo;</a>',
+              esc_url( $base_url . '&paged=' . ( $current_page + 1 ) ) );
+  }
+  ?>
+</div>
+<?php endif; ?>
+
 </div>

@@ -6,7 +6,11 @@
 
 <?php
 global $wpdb;
-$rows = $wpdb->get_results( "SELECT * FROM " . Aff_DB::table('blocks') . " ORDER BY id DESC" );
+// SELECT * を避けてリスト表示に必要なカラムのみ取得
+$rows = $wpdb->get_results(
+    "SELECT id, block_name, block_slug, placement_type, max_links, display_format, status
+     FROM " . Aff_DB::table('blocks') . " ORDER BY id DESC"
+);
 ?>
 <table class="widefat aff-table">
 <thead>

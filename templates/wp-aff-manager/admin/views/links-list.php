@@ -7,7 +7,11 @@
 
 <?php
 global $wpdb;
-$rows = $wpdb->get_results( "SELECT * FROM " . Aff_DB::table('links') . " ORDER BY id DESC" );
+// SELECT * を避けてリスト表示に必要なカラムのみ取得
+$rows = $wpdb->get_results(
+    "SELECT id, link_name, advertiser, commission_type, unit_price, status, click_count, valid_until
+     FROM " . Aff_DB::table('links') . " ORDER BY id DESC"
+);
 ?>
 <table class="widefat aff-table">
 <thead>
