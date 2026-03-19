@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Choose Your Fit "T-Shirt" | [ブランド名]</title>
+  <!--
+  ================================================================
+  Tシャツ比較ページ テンプレート
+  参考構造: championstore.jp/choose-your-fit-sweatshirt
+  作成: 2026-03-13
+
+  カスタマイズポイントは ★ で示しています。
+  データは下部の <script> 内 MODELS 配列を編集してください。
+  ================================================================
+  -->
+  <style>
+    /* ===================================================
+       CSS カスタムプロパティ（ブランドカラーをここで変更）
+       =================================================== */
+    :root {
+      --color-primary : #1a2b6d;   /* ★ メインカラー（ナビ・製品セクション背景） */
+      --color-accent  : #e8001c;   /* ★ アクセント（CTAボタン） */
+      --color-white   : #ffffff;
+      --color-light   : #f5f5f5;
+      --color-text    : #1a1a1a;
+      --color-muted   : #666666;
+      --color-border  : rgba(255,255,255,0.25);
+      --max-width     : 1200px;
+      --font-base     : 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', Meiryo, sans-serif;
+    }
+
+    /* === RESET === */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html  { font-size: 16px; scroll-behavior: smooth; }
+    body  { font-family: var(--font-base); color: var(--color-text); line-height: 1.7; }
+    img   { max-width: 100%; display: block; }
+    button { cursor: pointer; border: none; background: none; font-family: inherit; }
+    ul    { list-style: none; }
+    a     { text-decoration: none; color: inherit; }
+
+    /* === HERO: スクロールギャラリー === */
+    .hero-section   { background: var(--color-white); overflow: hidden; }
+    .hero-content   { position: relative; }
+    .scroll-gallery { overflow: hidden; padding: 12px 0; background: var(--color-light); }
+
+    .scroll-row {
+      display: flex; gap: 10px; width: max-content; padding: 5px 0;
+    }
+    .scroll-row.to-left  { animation: scrollLeft  40s linear infinite; }
+    .scroll-row.to-right { animation: scrollRight 45s linear infinite; }
+    .scroll-row.slow     { animation-duration: 55s; }
+    @keyframes scrollLeft  { from { transform: translateX(0);    } to { transform: translateX(-50%); } }
+    @keyframes scrollRight { from { transform: translateX(-50%); } to { transform: translateX(0);    } }
+    .scroll-row img {
+      width: 110px; height: 110px; object-fit: cover;
+      border-radius: 4px; flex-shrink: 0;
+    }
+
+    /* === HERO: テキストブロック === */
+    .hero-text-block {
+      max-width: var(--max-width); margin: 0 auto;
+      padding: 52px 24px 44px; text-align: center;
+    }
+    .hero-title {
+      font-size: clamp(2rem, 6vw, 4rem); font-weight: 900;
+      line-height: 1.15; color: var(--color-primary); margin-bottom: 24px;
+    }
+    .hero-title em { font-style: italic; color: var(--color-accent); }
+    .hero-description {
+      max-width: 680px; margin: 0 auto 0;
+      font-size: 0.95rem; color: var(--color-muted);
+    }
+    .hero-description p + p { margin-top: 6px; }
+
+    /* === CHECK SECTION === */
+    .check-section {
+      background: var(--color-primary); color: var(--color-white);
+      padding: 52px 24px; text-align: center;
+    }
+    .check-section h3 {
+      font-size: clamp(1.4rem, 4vw, 2rem); font-weight: 800;
+      margin-bottom: 12px; letter-spacing: 0.04em;
+    }
+    .check-section p { font-size: 0.9rem; opacity: 0.85; max-width: 540px; margin: 0 auto; }
+
+    /* === PRODUCT SECTION === */
+    .product-section { background: var(--color-primary); color: var(--color-white); padding-bottom: 72px; }
+    .product-info    { max-width: var(--max-width); margin: 0 auto; padding: 0 24px; }
+
+    /* サムネイルタブ */
+    .thumb-tabs { display: flex; gap: 8px; overflow-x: auto; padding: 28px 0 20px; scrollbar-width: none; }
+    .thumb-tabs::-webkit-scrollbar { display: none; }
+    .thumb-tab {
+      flex-shrink: 0; width: 80px; border: 2px solid transparent;
+      border-radius: 6px; overflow: hidden; opacity: 0.55;
+      transition: border-color 0.2s, opacity 0.2s;
+    }
+    .thumb-tab.active        { border-color: var(--color-white); opacity: 1; }
+    .thumb-tab:hover         { opacity: 0.9; }
+    .thumb-tab img           { width: 100%; aspect-ratio: 1; object-fit: cover; }
+
+    /* 商品ヘッダー */
+    .product-header  { border-bottom: 1px dashed var(--color-border); padding-bottom: 20px; margin-bottom: 24px; }
+    .product-title   { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
+    .product-name    { font-size: clamp(0.95rem, 2.2vw, 1.25rem); font-weight: 700; line-height: 1.4; flex: 1; }
+    .product-price   { font-size: 1.6rem; font-weight: 800; white-space: nowrap; }
+
+    /* モデル身長・サイズ選択 */
+    .model-selection { display: flex; gap: 28px; flex-wrap: wrap; margin-bottom: 28px; }
+    .model-option    { display: flex; flex-direction: column; gap: 8px; }
+    .height          { font-size: 0.78rem; opacity: 0.75; letter-spacing: 0.04em; }
+    .size-buttons    { display: flex; gap: 6px; flex-wrap: wrap; }
+    .size-btn {
+      padding: 5px 14px; border: 1px solid rgba(255,255,255,0.4);
+      border-radius: 20px; font-size: 0.85rem; color: var(--color-white);
+      transition: background 0.18s, border-color 0.18s, color 0.18s;
+    }
+    .size-btn.active, .size-btn:hover {
+      background: var(--color-white); color: var(--color-primary); border-color: var(--color-white);
+    }
+
+    /* 写真グリッド */
+    .product-images  { display: grid; grid-template-columns: 2fr 1fr; gap: 8px; margin-bottom: 24px; }
+    .img-right-col   { display: flex; flex-direction: column; gap: 8px; }
+    .img-main, .img-top-right, .img-bottom-right { overflow: hidden; border-radius: 4px; }
+    .img-main        { aspect-ratio: 3/4; }
+    .img-top-right, .img-bottom-right { flex: 1; aspect-ratio: 1/1; }
+    .product-images img { width: 100%; height: 100%; object-fit: cover; transition: opacity 0.3s; }
+    .modal-trigger   { cursor: zoom-in; }
+
+    /* カラースウォッチ */
+    .color-options  { margin-bottom: 24px; padding-bottom: 22px; border-bottom: 1px dashed var(--color-border); }
+    .color-label    { font-size: 0.82rem; margin-bottom: 10px; opacity: 0.75; }
+    .color-swatches { display: flex; gap: 8px; flex-wrap: wrap; }
+    .color-swatch   {
+      width: 42px; height: 42px; border-radius: 50%; overflow: hidden;
+      border: 2px solid rgba(255,255,255,0.3); cursor: pointer;
+      transition: border-color 0.18s, transform 0.18s;
+    }
+    .color-swatch:hover, .color-swatch.active { border-color: var(--color-white); transform: scale(1.12); }
+    .color-swatch img { width: 100%; height: 100%; object-fit: cover; }
+
+    /* アコーディオン */
+    .accordion         { border-top: 1px dashed var(--color-border); }
+    .accordion-header  {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 16px 0; cursor: pointer; font-size: 1rem; font-weight: 600;
+      user-select: none;
+    }
+    .toggle-icon        { font-size: 1.3rem; font-weight: 300; transition: transform 0.25s; line-height: 1; }
+    .accordion.open .toggle-icon { transform: rotate(45deg); }
+    .accordion-body    { display: none; padding-bottom: 24px; }
+    .accordion.open .accordion-body { display: block; }
+    .spec-item         { display: flex; gap: 16px; padding: 9px 0; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 0.9rem; }
+    .spec-label        { flex-shrink: 0; width: 88px; opacity: 0.68; }
+    .spec-value        { flex: 1; }
+
+    /* サイズ表 */
+    .size-table-wrap   { overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 4px; }
+    .size-table        { width: 100%; min-width: 420px; border-collapse: collapse; font-size: 0.82rem; margin-bottom: 6px; }
+    .size-table th, .size-table td {
+      padding: 8px 10px; text-align: center; border: 1px solid rgba(255,255,255,0.2);
+    }
+    .size-table thead th { background: rgba(255,255,255,0.1); font-weight: 600; }
+    .size-table tbody th { text-align: left; opacity: 0.75; font-weight: 500; }
+    .size-table .current-size { background: rgba(255,255,255,0.12); }
+    .unit              { font-size: 0.74rem; opacity: 0.65; margin-bottom: 14px; }
+    .size-guide-images { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px,1fr)); gap: 8px; margin: 14px 0; }
+    .size-guide-images img { border-radius: 4px; }
+    .size-notes        { font-size: 0.8rem; opacity: 0.68; }
+    .size-notes li     { padding: 3px 0; }
+    .size-notes li::before { content: '※ '; }
+
+    /* CTAボタン（製品セクション内） */
+    .cta-button {
+      display: block; width: 100%; max-width: 360px; margin: 36px auto 0;
+      padding: 16px 24px; background: var(--color-accent); color: var(--color-white);
+      font-size: 1rem; font-weight: 700; text-align: center;
+      border-radius: 4px; transition: opacity 0.18s, transform 0.18s;
+    }
+    .cta-button:hover { opacity: 0.88; transform: translateY(-2px); }
+
+    /* === ABOUT / FEATURE SECTIONS === */
+    .about-section, .feature-section {
+      background: var(--color-white); padding: 84px 24px;
+    }
+    .feature-section { border-top: 1px dashed #d0d0d0; border-bottom: 1px dashed #d0d0d0; }
+    .about-content, .feature-content { max-width: 780px; margin: 0 auto; text-align: center; }
+    .section-heading {
+      font-size: clamp(1.6rem, 4vw, 2.4rem); font-weight: 900;
+      letter-spacing: 0.08em; color: var(--color-primary);
+      padding-bottom: 16px; margin-bottom: 0;
+      position: relative;
+    }
+    .section-heading::after {
+      content: ''; display: block; width: 36px; height: 2px;
+      background: var(--color-primary); margin: 12px auto 0;
+    }
+    .section-subheading {
+      font-size: 0.82rem; letter-spacing: 0.14em; color: var(--color-accent);
+      margin: 20px 0 32px; font-weight: 700; text-transform: uppercase;
+    }
+    .about-content p, .feature-content p {
+      font-size: 0.95rem; line-height: 1.88; text-align: left;
+      color: #333; margin-bottom: 12px;
+    }
+
+    /* === CLOSING CTA === */
+    .closing-cta-section { background: var(--color-white); padding: 84px 24px; text-align: center; }
+    .closing-cta-section h2 {
+      font-size: clamp(1.3rem, 3.5vw, 1.9rem); font-weight: 800;
+      color: var(--color-primary); margin-bottom: 16px;
+    }
+    .closing-cta-section p { font-size: 0.9rem; color: var(--color-muted); max-width: 460px; margin: 0 auto 32px; }
+    .closing-cta-btn {
+      display: inline-block; padding: 16px 48px;
+      background: var(--color-primary); color: var(--color-white);
+      font-size: 0.95rem; font-weight: 700; border-radius: 4px;
+      letter-spacing: 0.05em; transition: opacity 0.18s;
+    }
+    .closing-cta-btn:hover { opacity: 0.84; }
+
+    /* === RESPONSIVE === */
+    @media (max-width: 768px) {
+      .product-images { grid-template-columns: 1fr; }
+      .img-right-col  { flex-direction: row; }
+      .img-top-right, .img-bottom-right { aspect-ratio: 1/1; }
+      .hero-text-block { padding: 36px 16px 28px; }
+      .thumb-tab { width: 60px; }
+      .product-title { flex-direction: column; }
+    }
+    @media (max-width: 480px) {
+      .product-price  { font-size: 1.3rem; }
+      .scroll-row img { width: 80px; height: 80px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- =====================================================
+     SECTION 1: HERO
+     ===================================================== -->
+<section class="hero-section">
+  <div class="hero-content">
+
+    <!-- ★ スクロールギャラリー: [IMG_ROW*_*] を実際の商品画像パスに差し替え -->
+    <div class="scroll-gallery">
+      <!-- Row 1: 左スクロール -->
+      <div class="scroll-row to-left slow">
+        <div class="track">
+          <img src="[IMG_ROW1_1]" alt="T-Shirt A">
+          <img src="[IMG_ROW1_2]" alt="T-Shirt B">
+          <img src="[IMG_ROW1_3]" alt="T-Shirt C">
+          <img src="[IMG_ROW1_4]" alt="T-Shirt D">
+          <img src="[IMG_ROW1_5]" alt="T-Shirt E">
+          <img src="[IMG_ROW1_6]" alt="T-Shirt F">
+          <img src="[IMG_ROW1_7]" alt="T-Shirt G">
+        </div>
+        <div class="track" aria-hidden="true"><!-- 無限ループ用複製（同じ画像）-->
+          <img src="[IMG_ROW1_1]" alt=""><img src="[IMG_ROW1_2]" alt="">
+          <img src="[IMG_ROW1_3]" alt=""><img src="[IMG_ROW1_4]" alt="">
+          <img src="[IMG_ROW1_5]" alt=""><img src="[IMG_ROW1_6]" alt="">
+          <img src="[IMG_ROW1_7]" alt="">
+        </div>
+      </div>
+      <!-- Row 2: 右スクロール -->
+      <div class="scroll-row to-right">
+        <div class="track" aria-hidden="true">
+          <img src="[IMG_ROW2_1]" alt=""><img src="[IMG_ROW2_2]" alt="">
+          <img src="[IMG_ROW2_3]" alt=""><img src="[IMG_ROW2_4]" alt="">
+          <img src="[IMG_ROW2_5]" alt=""><img src="[IMG_ROW2_6]" alt="">
+          <img src="[IMG_ROW2_7]" alt="">
+        </div>
+        <div class="track" aria-hidden="true">
+          <img src="[IMG_ROW2_1]" alt=""><img src="[IMG_ROW2_2]" alt="">
+          <img src="[IMG_ROW2_3]" alt=""><img src="[IMG_ROW2_4]" alt="">
+          <img src="[IMG_ROW2_5]" alt=""><img src="[IMG_ROW2_6]" alt="">
+          <img src="[IMG_ROW2_7]" alt="">
+        </div>
+      </div>
+    </div><!-- /.scroll-gallery -->
+
+    <!-- ★ ヒーローテキスト -->
+    <div class="hero-text-block">
+      <h1 class="hero-title">
+        Choose Your Fit<br>
+        <em>'T-Shirt'</em><!-- ★ カテゴリー名 -->
+      </h1>
+      <div class="hero-description">
+        <p>シリーズごとに異なるシルエットやフィット感を比較して、あなたにぴったりの一枚を見つけられる特集ページです。</p>
+        <p>タイトシルエットからリラックスフィットまで、着丈・身幅・肩幅の違いを写真で確認できます。</p>
+        <p>シーンや好みに合わせて最適なフィットを選べるので、迷わず自分だけの一枚が見つかります。</p>
+      </div>
+    </div>
+
+  </div><!-- /.hero-content -->
+
+  <!-- ★ モデル数を変えるときはここの数字も変更 -->
+  <div class="check-section">
+    <h3>Nモデルを一目でCHECK!</h3>
+    <p>モデル着用写真とサイズ表を使って、実際のシルエットを分かりやすく比較。購入前の不安を解消します。</p>
+  </div>
+
+</section><!-- /.hero-section -->
+
+<!-- =====================================================
+     SECTION 2: PRODUCT (dark background)
+     ===================================================== -->
+<section class="product-section">
+  <div class="product-info">
+
+    <!-- ★ サムネイルタブ: data-model="0" 〜 N-1 で対応 -->
+    <!-- ★ モデル数に合わせてボタンを追加/削除してください -->
+    <div class="thumb-tabs" role="tablist" aria-label="モデル選択">
+      <button class="thumb-tab active" data-model="0" role="tab" aria-selected="true">
+        <img src="[IMG_TAB_1]" alt="[モデル名1]">
+      </button>
+      <button class="thumb-tab" data-model="1" role="tab" aria-selected="false">
+        <img src="[IMG_TAB_2]" alt="[モデル名2]">
+      </button>
+      <button class="thumb-tab" data-model="2" role="tab" aria-selected="false">
+        <img src="[IMG_TAB_3]" alt="[モデル名3]">
+      </button>
+      <button class="thumb-tab" data-model="3" role="tab" aria-selected="false">
+        <img src="[IMG_TAB_4]" alt="[モデル名4]">
+      </button>
+      <!-- 必要に応じて追加: <button class="thumb-tab" data-model="4">...</button> -->
+    </div>
+
+    <!-- 商品名・価格（JSで更新） -->
+    <div class="product-header">
+      <div class="product-title">
+        <h2 class="product-name" id="product-name">-</h2>
+        <div class="product-price" id="product-price">-</div>
+      </div>
+    </div>
+
+    <!-- モデル身長・サイズ選択（JSで更新） -->
+    <div class="model-selection" id="model-selection">
+      <!-- JSレンダリング用プレースホルダー -->
+    </div>
+
+    <!-- 写真グリッド: 正面(大) + 背面/横(小2枚) -->
+    <div class="product-images">
+      <figure class="img-main">
+        <img id="img-front" src="" alt="" class="modal-trigger">
+      </figure>
+      <div class="img-right-col">
+        <figure class="img-top-right">
+          <img id="img-back" src="" alt="">
+        </figure>
+        <figure class="img-bottom-right">
+          <img id="img-side" src="" alt="">
+        </figure>
+      </div>
+    </div>
+
+    <!-- 展開カラー -->
+    <div class="color-options">
+      <p class="color-label">展開カラー</p>
+      <div class="color-swatches" id="color-swatches">
+        <!-- JSレンダリング -->
+      </div>
+    </div>
+
+    <!-- アコーディオン: スペック情報 -->
+    <div class="accordion" id="accordion-spec">
+      <div class="accordion-header" aria-expanded="false">
+        <span>スペック情報</span><span class="toggle-icon">+</span>
+      </div>
+      <div class="accordion-body">
+        <div class="spec-item"><span class="spec-label">価格</span><span class="spec-value" id="spec-price">-</span></div>
+        <div class="spec-item"><span class="spec-label">素材</span><span class="spec-value" id="spec-material">-</span></div>
+        <div class="spec-item"><span class="spec-label">展開サイズ</span><span class="spec-value" id="spec-sizes">-</span></div>
+        <div class="spec-item"><span class="spec-label">製造国</span><span class="spec-value" id="spec-origin">-</span></div>
+        <div class="spec-item"><span class="spec-label">特徴</span><span class="spec-value" id="spec-features">-</span></div>
+      </div>
+    </div>
+
+    <!-- アコーディオン: シリーズ情報 -->
+    <div class="accordion" id="accordion-series">
+      <div class="accordion-header" aria-expanded="false">
+        <span>シリーズ情報</span><span class="toggle-icon">+</span>
+      </div>
+      <div class="accordion-body">
+        <p id="series-text" style="font-size:0.9rem;line-height:1.85;">-</p>
+      </div>
+    </div>
+
+    <!-- アコーディオン: サイズ展開詳細 -->
+    <div class="accordion" id="accordion-size">
+      <div class="accordion-header" aria-expanded="false">
+        <span>サイズ展開詳細</span><span class="toggle-icon">+</span>
+      </div>
+      <div class="accordion-body">
+        <div class="size-table-wrap">
+          <table class="size-table" id="size-table"><!-- JSレンダリング --></table>
+          <p class="unit">単位: cm（平置き実測値、目安）</p>
+        </div>
+        <div class="size-guide-images" id="size-guide-images"><!-- JSレンダリング --></div>
+        <ul class="size-notes" id="size-notes"><!-- JSレンダリング --></ul>
+      </div>
+    </div>
+
+    <!-- ★ CTAボタン -->
+    <a href="#" class="cta-button" id="cta-link" target="_blank" rel="noopener noreferrer">
+      現在表示の商品はこちら
+    </a>
+
+  </div><!-- /.product-info -->
+</section><!-- /.product-section -->
+
+<!-- =====================================================
+     SECTION 3: ABOUT（ブランドストーリー）
+     ===================================================== -->
+<section class="about-section">
+  <div class="about-content">
+    <h2 class="section-heading">ABOUT [ブランド名]</h2><!-- ★ -->
+    <p class="section-subheading">[設立地] since [創業年]</p><!-- ★ -->
+    <!-- ★ ブランドストーリーのテキストを入れてください -->
+    <p>[ブランドストーリー段落1：創業の経緯、理念など]</p>
+    <p>[ブランドストーリー段落2：製品の特徴、こだわりなど]</p>
+    <p>[ブランドストーリー段落3：現在のブランドの姿、未来への展望など]</p>
+  </div>
+</section>
+
+<!-- =====================================================
+     SECTION 4: FEATURE（素材・技術紹介）
+     ===================================================== -->
+<section class="feature-section">
+  <div class="feature-content">
+    <h2 class="section-heading">[素材名 / 製法名]</h2><!-- ★ -->
+    <p class="section-subheading">[キャッチコピー]</p><!-- ★ -->
+    <!-- ★ 素材・製法の説明を入れてください -->
+    <p>[素材・技術の説明段落1：誕生の背景、特徴など]</p>
+    <p>[素材・技術の説明段落2：使用感、耐久性、差別化ポイントなど]</p>
+  </div>
+</section>
+
+<!-- =====================================================
+     SECTION 5: CLOSING CTA
+     ===================================================== -->
+<section class="closing-cta-section">
+  <h2>お気に入りの一着を見つけよう</h2><!-- ★ -->
+  <p>比べて分かる、それぞれの魅力。自分にフィットする一着を、ぜひ手に取ってください。</p><!-- ★ -->
+  <!-- ★ 関連ページ（例: パーカー比較ページ）へのリンク -->
+  <a href="[RELATED_PAGE_URL]" class="closing-cta-btn">[関連カテゴリー名]はこちら</a>
+</section>
+
+<!-- =====================================================
+     JAVASCRIPT
+     ===================================================== -->
+<script>
+'use strict';
+
+/* ================================================================
+   ★★★ 商品データ — ここをカスタマイズしてください ★★★
+   ================================================================
+   MODELS 配列に各モデルのデータオブジェクトを追加します。
+   要素数がタブの数と一致するようにしてください。
+   ================================================================ */
+const MODELS = [
+  /* ---- モデル 1 ---- */
+  {
+    name   : '[モデル名1]（品番1）',
+    price  : '¥X,XXX',         /* 税込表記 */
+    ctaUrl : '[商品ページURL1]',
+    heroImages: {
+      front: '[IMG_MODEL1_FRONT]',   /* 正面着用 */
+      back : '[IMG_MODEL1_BACK]',    /* 背面着用 */
+      side : '[IMG_MODEL1_SIDE]',    /* 横（サイド）着用 */
+    },
+    /* 身長ごとのサイズ選択肢 */
+    heights: [
+      { label: '170cm', sizes: ['S','M','L'] },
+      { label: '178cm', sizes: ['M','L','XL'] },
+    ],
+    /* カラーバリエーション */
+    colors: [
+      { img: '[IMG_COLOR1_1]', alt: 'ホワイト' },
+      { img: '[IMG_COLOR1_2]', alt: 'ブラック' },
+      { img: '[IMG_COLOR1_3]', alt: 'グレー'  },
+    ],
+    /* スペック */
+    specs: {
+      price   : '¥X,XXX（税込）',
+      material: 'コットン100%',
+      sizes   : 'XS, S, M, L, XL',
+      origin  : '日本',
+      features: '[特徴1: 例）丸胴仕様 / 胸ポケット付き]',
+    },
+    seriesText: '[シリーズ説明テキスト1]',
+    /* サイズ表 */
+    sizeChart: {
+      headers: ['サイズ','S','M','L','XL'],
+      rows   : [
+        ['身丈', 64, 67, 70, 73],
+        ['身幅', 47, 50, 53, 56],
+        ['肩幅', 40, 42, 44, 46],
+        ['袖丈', 18, 19, 20, 21],
+      ],
+    },
+    sizeGuideImages: ['[IMG_SIZE1_1]','[IMG_SIZE1_2]','[IMG_SIZE1_3]'],
+    sizeNotes: ['モデル身長170cm・Mサイズ着用','サイズは目安です。個体差が生じる場合があります。'],
+  },
+  /* ---- モデル 2 ---- */
+  {
+    name   : '[モデル名2]（品番2）',
+    price  : '¥X,XXX',
+    ctaUrl : '[商品ページURL2]',
+    heroImages: { front:'[IMG_MODEL2_FRONT]', back:'[IMG_MODEL2_BACK]', side:'[IMG_MODEL2_SIDE]' },
+    heights: [
+      { label: '170cm', sizes: ['S','M','L','XL'] },
+      { label: '178cm', sizes: ['M','L','XL'] },
+    ],
+    colors: [
+      { img: '[IMG_COLOR2_1]', alt: 'ネイビー' },
+      { img: '[IMG_COLOR2_2]', alt: 'オフホワイト' },
+    ],
+    specs: {
+      price:'¥X,XXX（税込）', material:'コットン100%', sizes:'S, M, L, XL',
+      origin:'日本', features:'[特徴2]',
+    },
+    seriesText: '[シリーズ説明テキスト2]',
+    sizeChart: {
+      headers: ['サイズ','S','M','L','XL'],
+      rows: [['身丈',65,68,71,74],['身幅',48,51,54,57],['肩幅',41,43,45,47],['袖丈',19,20,21,22]],
+    },
+    sizeGuideImages: ['[IMG_SIZE2_1]','[IMG_SIZE2_2]'],
+    sizeNotes: ['モデル身長170cm・Mサイズ着用'],
+  },
+  /* ★ モデルを追加する場合はここにオブジェクトを追加 */
+];
+
+/* ================================================================
+   タブ切り替え & レンダリング
+   ================================================================ */
+function renderModel(index) {
+  const m = MODELS[index];
+  if (!m) return;
+
+  /* 名前・価格 */
+  document.getElementById('product-name').textContent  = m.name;
+  document.getElementById('product-price').textContent = m.price;
+  document.getElementById('cta-link').href             = m.ctaUrl;
+
+  /* 写真 */
+  const imgFront = document.getElementById('img-front');
+  const imgBack  = document.getElementById('img-back');
+  const imgSide  = document.getElementById('img-side');
+  imgFront.src = m.heroImages.front; imgFront.alt = m.name + ' 正面';
+  imgBack.src  = m.heroImages.back;  imgBack.alt  = m.name + ' 背面';
+  imgSide.src  = m.heroImages.side;  imgSide.alt  = m.name + ' 横';
+
+  /* モデル身長・サイズ選択 */
+  document.getElementById('model-selection').innerHTML =
+    m.heights.map(function(h) {
+      const btns = h.sizes.map(function(s, si) {
+        return '<button class="size-btn' + (si === 0 ? ' active' : '') + '">' + s + '</button>';
+      }).join('');
+      return '<div class="model-option"><span class="height">' + h.label +
+             '</span><div class="size-buttons">' + btns + '</div></div>';
+    }).join('');
+
+  /* カラースウォッチ */
+  document.getElementById('color-swatches').innerHTML =
+    m.colors.map(function(c, ci) {
+      return '<div class="color-swatch' + (ci === 0 ? ' active' : '') + '">' +
+             '<img src="' + c.img + '" alt="' + c.alt + '"></div>';
+    }).join('');
+
+  /* スペック */
+  document.getElementById('spec-price').textContent    = m.specs.price;
+  document.getElementById('spec-material').textContent = m.specs.material;
+  document.getElementById('spec-sizes').textContent    = m.specs.sizes;
+  document.getElementById('spec-origin').textContent   = m.specs.origin;
+  document.getElementById('spec-features').textContent = m.specs.features;
+  document.getElementById('series-text').textContent   = m.seriesText;
+
+  /* サイズ表 */
+  const sc     = m.sizeChart;
+  const thead  = '<thead><tr>' + sc.headers.map(function(h, hi) {
+    return '<th' + (hi === 0 ? '' : '') + '>' + h + '</th>';
+  }).join('') + '</tr></thead>';
+  const tbody  = '<tbody>' + sc.rows.map(function(row) {
+    return '<tr>' + row.map(function(cell, ci) {
+      return ci === 0 ? '<th>' + cell + '</th>' : '<td>' + cell + '</td>';
+    }).join('') + '</tr>';
+  }).join('') + '</tbody>';
+  document.getElementById('size-table').innerHTML = thead + tbody;
+
+  /* サイズガイド画像 */
+  document.getElementById('size-guide-images').innerHTML =
+    m.sizeGuideImages.map(function(src, i) {
+      return '<img src="' + src + '" alt="着用イメージ' + (i + 1) + '">';
+    }).join('');
+
+  /* 注記 */
+  document.getElementById('size-notes').innerHTML =
+    m.sizeNotes.map(function(n) { return '<li>' + n + '</li>'; }).join('');
+
+  /* タブのアクティブ状態を更新 */
+  document.querySelectorAll('.thumb-tab').forEach(function(tab, i) {
+    const active = (i === index);
+    tab.classList.toggle('active', active);
+    tab.setAttribute('aria-selected', String(active));
+  });
+
+  /* アコーディオンを閉じる */
+  document.querySelectorAll('.accordion').forEach(function(acc) {
+    acc.classList.remove('open');
+    const h = acc.querySelector('.accordion-header');
+    if (h) h.setAttribute('aria-expanded', 'false');
+  });
+}
+
+/* タブクリック */
+document.querySelectorAll('.thumb-tab').forEach(function(tab) {
+  tab.addEventListener('click', function() {
+    renderModel(parseInt(this.getAttribute('data-model'), 10));
+  });
+});
+
+/* ================================================================
+   アコーディオン
+   ================================================================ */
+document.querySelectorAll('.accordion-header').forEach(function(header) {
+  header.addEventListener('click', function() {
+    const acc    = this.closest('.accordion');
+    const isOpen = acc.classList.toggle('open');
+    this.setAttribute('aria-expanded', String(isOpen));
+  });
+});
+
+/* ================================================================
+   サイズボタン・カラースウォッチ（イベント委任）
+   ================================================================ */
+document.getElementById('model-selection').addEventListener('click', function(e) {
+  const btn = e.target.closest('.size-btn');
+  if (!btn) return;
+  btn.closest('.size-buttons').querySelectorAll('.size-btn')
+     .forEach(function(b) { b.classList.remove('active'); });
+  btn.classList.add('active');
+});
+
+document.getElementById('color-swatches').addEventListener('click', function(e) {
+  const sw = e.target.closest('.color-swatch');
+  if (!sw) return;
+  this.querySelectorAll('.color-swatch').forEach(function(s) { s.classList.remove('active'); });
+  sw.classList.add('active');
+});
+
+/* ================================================================
+   初期表示
+   ================================================================ */
+renderModel(0);
+
+</script>
+</body>
+</html>
