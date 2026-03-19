@@ -1,0 +1,41 @@
+/* ── WP Affiliate Manager — Frontend CSS ── */
+
+/* ブロックラッパー */
+.aff-block { margin: 1.5em 0; }
+
+/* テキストリンク */
+.aff-block .aff-link {
+    display: inline-block;
+    color: #1a2b6d;
+    text-decoration: underline;
+    font-weight: 600;
+    margin-right: .75em;
+}
+.aff-block .aff-link:hover { color: #c0392b; }
+
+/* ボタン */
+.aff-block .aff-btn {
+    display: inline-block;
+    background: #c0392b;
+    color: #fff !important;
+    padding: .55em 1.4em;
+    border-radius: 4px;
+    font-weight: 700;
+    text-decoration: none !important;
+    margin-right: .5em;
+    transition: background .2s;
+}
+.aff-block .aff-btn:hover { background: #96281b; }
+
+/* リスト */
+.aff-block ul { list-style: none; padding: 0; margin: 0; }
+.aff-block .aff-list-item { margin-bottom: .4em; }
+.aff-block .aff-list-item a { color: #1a2b6d; font-weight: 600; }
+.aff-block .aff-list-item a:hover { color: #c0392b; }
+
+/* バナー */
+.aff-block .aff-banner { display: inline-block; margin: .25em; }
+.aff-block .aff-banner img { display: block; max-width: 100%; height: auto; }
+
+/* ナビゲーション挿入 */
+li.aff-nav-item .aff-btn { padding: .35em 1em; font-size: .9em; }
