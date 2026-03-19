@@ -30,7 +30,13 @@ if ( is_admin() ) {
 }
 
 // ── Activation / Deactivation ──────────────────────────────────────────
-register_activation_hook( __FILE__, [ 'Aff_DB', 'install' ] );
+register_activation_hook( __FILE__, function () {
+    Aff_DB::install();
+    // /aff-click/ リライトルールをキャッシュに書き込んでから即フラッシュ。
+    // これをしないとプラグイン有効化直後にクリック計測 URL が 404 になる。
+    add_rewrite_rule( '^aff-click/?$', 'index.php?aff_click=1', 'top' );
+    flush_rewrite_rules();
+} );
 register_deactivation_hook( __FILE__, function () {
     flush_rewrite_rules();
 } );
