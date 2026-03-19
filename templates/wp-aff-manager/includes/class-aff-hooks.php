@@ -64,6 +64,9 @@ class Aff_Hooks {
     }
 
     // ── ヘッダー ──────────────────────────────────────────────────────
+    // 意図的に is_singular() 制限なし:
+    // ヘッダー広告はトップページ・アーカイブ・404 など全ページで表示させる設計。
+    // ページ条件（wp_aff_pages）で表示先を絞り込みたい場合は管理画面から設定する。
     public function inject_header(): void {
         $blocks = Aff_Query::get_blocks_by_placement( 'header' );
         foreach ( $blocks as $block ) {
@@ -72,6 +75,7 @@ class Aff_Hooks {
     }
 
     // ── フッター ──────────────────────────────────────────────────────
+    // 同上: フッター広告も全ページ対象。ページ条件で絞り込み可能。
     public function inject_footer(): void {
         $blocks = Aff_Query::get_blocks_by_placement( 'footer' );
         foreach ( $blocks as $block ) {
@@ -107,17 +111,25 @@ class Aff_Hooks {
             return '';
         }
 
+        // status と有効期限（valid_from / valid_until）を含めてチェック。
+        // get_links_for_block() と同じ条件を適用し、期限切れリンクが表示されないよう保証する。
         global $wpdb;
+        $now  = current_time( 'mysql' );
         $link = $wpdb->get_row( $wpdb->prepare(
-            "SELECT * FROM " . Aff_DB::table('links') . " WHERE id = %d AND status = 'active' LIMIT 1",
-            $id
+            "SELECT id, link_text, url FROM " . Aff_DB::table('links') . "
+             WHERE id = %d
+               AND status = 'active'
+               AND (valid_from  IS NULL OR valid_from  <= %s)
+               AND (valid_until IS NULL OR valid_until >= %s)
+             LIMIT 1",
+            $id, $now, $now
         ) );
         if ( ! $link ) {
             return '';
         }
 
         // [aff_link] はアサインメントを介さず直接リンクを出力するため
-        // クリックURLはリンクIDベースの簡易エンドポイントを使用
+        // クリック URL はリンク ID ベースの簡易エンドポイントを使用
         $text      = $atts['text'] !== '' ? $atts['text'] : $link->link_text;
         $track_url = esc_url( add_query_arg( 'link_id', $id, home_url( '/aff-click/' ) ) );
         return sprintf(

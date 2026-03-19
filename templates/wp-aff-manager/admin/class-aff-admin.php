@@ -125,10 +125,18 @@ class Aff_Admin {
     // ── SAVE: リンク ──────────────────────────────────────────────────
     private function save_link(): void {
         global $wpdb;
-        $id   = absint( $_POST['id'] ?? 0 );
+        $id        = absint( $_POST['id'] ?? 0 );
+        $link_name = sanitize_text_field( $_POST['link_name'] ?? '' );
+        $url       = esc_url_raw( $_POST['url'] ?? '' );
+
+        // サーバーサイド必須チェック（HTML required はバイパスされる可能性があるため）
+        if ( $link_name === '' || $url === '' ) {
+            wp_die( 'link_name と url は必須です。', 'Validation Error', [ 'back_link' => true ] );
+        }
+
         $data = [
-            'link_name'       => sanitize_text_field( $_POST['link_name'] ?? '' ),
-            'url'             => esc_url_raw( $_POST['url'] ?? '' ),
+            'link_name'       => $link_name,
+            'url'             => $url,
             'advertiser'      => sanitize_text_field( $_POST['advertiser'] ?? '' ),
             'link_text'       => sanitize_text_field( $_POST['link_text'] ?? '' ),
             'banner_url'      => esc_url_raw( $_POST['banner_url'] ?? '' ),
@@ -151,10 +159,17 @@ class Aff_Admin {
     // ── SAVE: ブロック ────────────────────────────────────────────────
     private function save_block(): void {
         global $wpdb;
-        $id   = absint( $_POST['id'] ?? 0 );
+        $id         = absint( $_POST['id'] ?? 0 );
+        $block_name = sanitize_text_field( $_POST['block_name'] ?? '' );
+        $block_slug = sanitize_key( $_POST['block_slug'] ?? '' );
+
+        if ( $block_name === '' || $block_slug === '' ) {
+            wp_die( 'block_name と block_slug は必須です。', 'Validation Error', [ 'back_link' => true ] );
+        }
+
         $data = [
-            'block_name'     => sanitize_text_field( $_POST['block_name'] ?? '' ),
-            'block_slug'     => sanitize_key( $_POST['block_slug'] ?? '' ),
+            'block_name'     => $block_name,
+            'block_slug'     => $block_slug,
             'placement_type' => sanitize_key( $_POST['placement_type'] ?? 'shortcode' ),
             'hook_name'      => sanitize_text_field( $_POST['hook_name'] ?? '' ),
             'max_links'      => absint( $_POST['max_links'] ?? 3 ),
@@ -176,9 +191,15 @@ class Aff_Admin {
     // ── SAVE: ページ条件 ──────────────────────────────────────────────
     private function save_page(): void {
         global $wpdb;
-        $id   = absint( $_POST['id'] ?? 0 );
+        $id          = absint( $_POST['id'] ?? 0 );
+        $page_label  = sanitize_text_field( $_POST['page_label'] ?? '' );
+
+        if ( $page_label === '' ) {
+            wp_die( 'ラベルは必須です。', 'Validation Error', [ 'back_link' => true ] );
+        }
+
         $data = [
-            'page_label'  => sanitize_text_field( $_POST['page_label'] ?? '' ),
+            'page_label'  => $page_label,
             'target_type' => sanitize_key( $_POST['target_type'] ?? 'all' ),
             'post_type'   => sanitize_key( $_POST['post_type'] ?? '' ),
             'post_id'     => absint( $_POST['post_id'] ?? 0 ) ?: null,
